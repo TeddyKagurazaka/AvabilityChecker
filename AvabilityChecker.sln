@@ -1,0 +1,29 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avability.Net", "Avability.Net\Avability.Net.csproj", "{96495651-1B76-4223-898E-580358C0E4BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avability.Core", "Avability.Core\Avability.Core.csproj", "{4476098B-7EE4-4762-8158-12B6AFCD7D62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avability.Core.Test", "Avability.Core.Test\Avability.Core.Test.csproj", "{726C6E13-2FAD-4290-B4B2-D2679F8D31A2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{96495651-1B76-4223-898E-580358C0E4BE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{96495651-1B76-4223-898E-580358C0E4BE}.Debug|x86.Build.0 = Debug|Any CPU
+		{96495651-1B76-4223-898E-580358C0E4BE}.Release|x86.ActiveCfg = Release|Any CPU
+		{96495651-1B76-4223-898E-580358C0E4BE}.Release|x86.Build.0 = Release|Any CPU
+		{4476098B-7EE4-4762-8158-12B6AFCD7D62}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4476098B-7EE4-4762-8158-12B6AFCD7D62}.Debug|x86.Build.0 = Debug|Any CPU
+		{4476098B-7EE4-4762-8158-12B6AFCD7D62}.Release|x86.ActiveCfg = Release|Any CPU
+		{4476098B-7EE4-4762-8158-12B6AFCD7D62}.Release|x86.Build.0 = Release|Any CPU
+		{726C6E13-2FAD-4290-B4B2-D2679F8D31A2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{726C6E13-2FAD-4290-B4B2-D2679F8D31A2}.Debug|x86.Build.0 = Debug|Any CPU
+		{726C6E13-2FAD-4290-B4B2-D2679F8D31A2}.Release|x86.ActiveCfg = Release|Any CPU
+		{726C6E13-2FAD-4290-B4B2-D2679F8D31A2}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
