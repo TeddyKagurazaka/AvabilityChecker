@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Avability.Core
 {
@@ -21,6 +20,8 @@ namespace Avability.Core
         public Dictionary<string, List<ModelTemp>> StoreStocks;
         public StoreInfo storeInfo;
 
+        public DateTime LastUpdate = new DateTime();
+
         public StockInfo()
         {
             StoreStocks = new Dictionary<string, List<ModelTemp>>();
@@ -31,12 +32,17 @@ namespace Avability.Core
             storeInfo = Stores;
         }
 
-        public bool Update()
+        public bool Update(bool iP12Pro = true)
         {
-            var data = Internals.Request("https://reserve-prime.apple.com/CN/zh_CN/reserve/A/availability.json");
+            StoreStocks.Clear();
+
+            var data = Internals.Request(string.Format("https://reserve-prime.apple.com/CN/zh_CN/reserve/{0}/availability.json",iP12Pro ? "A" :"F"));
             if (string.IsNullOrEmpty(data)) return false;
 
             var contents = JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
+
+            LastUpdate = new DateTime(1970,1,1,0,0,0, DateTimeKind.Utc).AddMilliseconds((long)contents["updated"]);
+
             var stores = JsonConvert.DeserializeObject<Dictionary<string, object>>(contents["stores"].ToString());
 
             foreach(var store in stores)
@@ -58,7 +64,7 @@ namespace Avability.Core
                 StoreStocks.Add(storeID, LocalStorage);
             }
 
-            Console.WriteLine("Stocks Loaded:" + StoreStocks.Count);
+            //Console.WriteLine("Stocks Loaded:" + StoreStocks.Count);
             return true;
         }
 
@@ -71,10 +77,21 @@ namespace Avability.Core
                 {
                     if(models.Stock.contract || models.Stock.unlocked)
                     {
-                        if (!output.ContainsKey(stores.Key))
-                            output.Add(stores.Key, new List<string>());
+                        var storeName = stores.Key;
+                        //if(storeInfo != null)
+                        //{
+                        //    var storeData = storeInfo.FindStore(stores.Key);
+                        //    if(storeData != null)
+                        //    {
+                        //        storeName = storeData.storeName;
+                        //    }
+                        //}
 
-                        output[stores.Key].Add(models.ModelID);
+
+                        if (!output.ContainsKey(storeName))
+                            output.Add(storeName, new List<string>());
+
+                        output[storeName].Add(models.ModelID);
                     }
                 }
             }
@@ -86,7 +103,7 @@ namespace Avability.Core
         {
             foreach(var stores in StoreStocks)
             {
-                if(storeInfo != null)
+                if (storeInfo != null)
                 {
                     var storeData = storeInfo.FindStore(stores.Key);
                     if (storeData != null)
@@ -97,7 +114,7 @@ namespace Avability.Core
                 }
                 else Console.WriteLine(stores.Key);
 
-                foreach(var models in stores.Value)
+                foreach (var models in stores.Value)
                 {
                     if (OnlyStock)
                     {
@@ -111,6 +128,7 @@ namespace Avability.Core
                 }
                 Console.WriteLine();
             }
+            Console.WriteLine("Last Update:" + LastUpdate.ToLocalTime().ToString());
         }
     }
 }
