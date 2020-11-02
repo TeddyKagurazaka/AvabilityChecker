@@ -9,14 +9,23 @@ namespace Avability.Core
 
         static System.Timers.Timer updateTimer;
         static bool iPhone12Pro = true;
+        static bool Beep = false;
+
+        static System.IO.StreamWriter sWriter;
 
         static void Main(string[] args)
         {
+            if(Beep)
+                Console.Beep(800, 500);
+
             stores = new StoreInfo();
             stores.Update();
 
             stocks = new StockInfo(stores);
             stocks.Update(iPhone12Pro);
+
+            sWriter = new System.IO.StreamWriter("Stocks.csv",true);
+            sWriter.AutoFlush = true;
 
             updateTimer = new System.Timers.Timer(10000);
             updateTimer.Elapsed += UpdateTimer_Elapsed;
@@ -29,8 +38,8 @@ namespace Avability.Core
                 {
                     case ConsoleKey.F1:
                         Console.Clear();
-                        Console.WriteLine("Switching to:" + (iPhone12Pro ? "12" : "12Pro"));
                         iPhone12Pro = !iPhone12Pro;
+                        Console.WriteLine("Switching to:" + (iPhone12Pro ? "12Pro" : "12"));
                         break;
                     case ConsoleKey.Spacebar:
                         Console.Clear();
@@ -40,8 +49,14 @@ namespace Avability.Core
                         Console.Clear();
                         stocks.PrintStocks(true);
                         break;
+                    case ConsoleKey.F2:
+                        Beep = !Beep;
+                        Console.WriteLine("Beep " + (Beep ? "Enabled" : "Disabled"));
+                        break;
                     case ConsoleKey.Escape:
                         updateTimer.Stop();
+                        sWriter.Flush();
+                        sWriter.Close();
                         Environment.Exit(0);
                         break;
                 }
@@ -74,7 +89,30 @@ namespace Avability.Core
 
                     foreach (var mdl in data.Value)
                     {
-                        Console.WriteLine("***Stocks:{0} {1}***", friendlyName, mdl);
+                        //if(
+                        //    (data.Key == "R502" || data.Key == "R580") //太古里or万象城
+                        //    && Beep 
+                        //    && (mdl == "MGLF3CH/A"  //白256
+                        //    || mdl == "MGLA3CH/A"   //白128
+                        //    || mdl == "MGLE3CH/A"   //黑256
+                        //    || mdl == "MGL93CH/A")) //黑128
+
+                        if(Beep)
+                            Console.Beep(800, 500);
+
+                        //将库存数据写入本地,用来统计库存信息
+                        sWriter.WriteLine("{0},{1},{2},{3},{4},{5},{6}",
+                            DateTime.Now.ToString(),                        //当前时间
+                            stocks.LastUpdate.ToLocalTime().ToString(),     //服务器库存时间(大约每30秒一次)
+                            friendlyName,                                   //店名
+                            data.Key,                                       //店ID(Rxxx)
+                            mdl,                                            //型号
+                            Translate(mdl),                                 //型号名(如 白色128G)
+                            (iPhone12Pro ? "12 Pro" : "12")                 //12或者12Pro
+                            );
+                        sWriter.Flush();
+
+                        Console.WriteLine("[{2}]***Stocks:{0} {1}***", friendlyName, Translate(mdl),DateTime.Now.ToShortTimeString());
                         Console.WriteLine(string.Format("https://reserve-prime.apple.com/CN/zh_CN/reserve/{2}?" +
                                                         "anchor-store={0}" +
                                                         "&store={0}" +
@@ -84,6 +122,33 @@ namespace Avability.Core
                 }
             }
             updateTimer.Start();
+        }
+
+        static string Translate(string model)
+        {
+            //这里只记录了Pro型号的颜色信息,其他返回原始型号
+            switch (model)
+            {
+                case "MGLF3CH/A":
+                    return "白256";
+                case "MGLA3CH/A":
+                    return "白128";
+                case "MGLE3CH/A":
+                    return "黑256";
+                case "MGL93CH/A":
+                    return "黑128";
+                case "MGLC3CH/A":
+                    return "金128";
+                case "MGLG3CH/A":
+                    return "金256";
+                case "MGLD3CH/A":
+                    return "蓝128";
+                case "MGLH3CH/A":
+                    return "蓝256";
+                default:
+                    return model;
+
+            }
         }
     }
 }

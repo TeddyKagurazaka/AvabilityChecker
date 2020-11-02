@@ -42,28 +42,34 @@ namespace Avability.Core
             var contents = JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
 
             LastUpdate = new DateTime(1970,1,1,0,0,0, DateTimeKind.Utc).AddMilliseconds((long)contents["updated"]);
-
-            var stores = JsonConvert.DeserializeObject<Dictionary<string, object>>(contents["stores"].ToString());
-
-            foreach(var store in stores)
-            {
-                var storeID = store.Key;
-                var models = JsonConvert.DeserializeObject<Dictionary<string, object>>(store.Value.ToString());
-
-                var LocalStorage = new List<ModelTemp>();
-                foreach(var model in models)
+            try {
+                if (!contents.ContainsKey("stores"))
                 {
-                    var modelID = model.Key;
-                    var avail = JsonConvert.DeserializeObject<Dictionary<string, StockTemp>>(model.Value.ToString());
-
-                    var newModelTemp = new ModelTemp();
-                    newModelTemp.ModelID = modelID;
-                    newModelTemp.Stock = avail["availability"];
-                    LocalStorage.Add(newModelTemp);
+                    Console.WriteLine("现在不提供预约服务,明早再来吧!");
+                    return true;
                 }
-                StoreStocks.Add(storeID, LocalStorage);
-            }
+                var stores = JsonConvert.DeserializeObject<Dictionary<string, object>>(contents["stores"].ToString());
 
+                foreach(var store in stores)
+                {
+                    var storeID = store.Key;
+                    var models = JsonConvert.DeserializeObject<Dictionary<string, object>>(store.Value.ToString());
+
+                    var LocalStorage = new List<ModelTemp>();
+                    foreach(var model in models)
+                    {
+                        var modelID = model.Key;
+                        var avail = JsonConvert.DeserializeObject<Dictionary<string, StockTemp>>(model.Value.ToString());
+
+                        var newModelTemp = new ModelTemp();
+                        newModelTemp.ModelID = modelID;
+                        newModelTemp.Stock = avail["availability"];
+                        LocalStorage.Add(newModelTemp);
+                    }
+                    StoreStocks.Add(storeID, LocalStorage);
+                }
+                }
+            catch {return false; }
             //Console.WriteLine("Stocks Loaded:" + StoreStocks.Count);
             return true;
         }
