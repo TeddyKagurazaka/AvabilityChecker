@@ -26,11 +26,12 @@ namespace Avability.Core
         }
 
         public bool Update(){
-            StoreData.Clear();
-            ConfigInfo.Clear();
 
             var data = Internals.Request("https://reserve-prime.apple.com/CN/zh_CN/reserve/A/stores.json");
             if (string.IsNullOrEmpty(data)) return false;
+
+            StoreData.Clear();
+            ConfigInfo.Clear();
 
             var contents = JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
             ConfigInfo = JsonConvert.DeserializeObject<Dictionary<string, object>>((contents["config"].ToString()));

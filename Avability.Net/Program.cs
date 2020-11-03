@@ -32,28 +32,66 @@ namespace Avability.Core
             updateTimer.AutoReset = true;
             updateTimer.Start();
 
+            try
+            {
+                while (true)
+                {
+                    switch (Console.ReadKey().Key)
+                    {
+                        case ConsoleKey.F1:
+                            Console.Clear();
+                            iPhone12Pro = !iPhone12Pro;
+                            Console.WriteLine("Switching to:" + (iPhone12Pro ? "12Pro" : "12"));
+                            break;
+                        case ConsoleKey.Spacebar:
+                            Console.Clear();
+                            stocks.PrintStocks();
+                            break;
+                        case ConsoleKey.Enter:
+                            Console.Clear();
+                            stocks.PrintStocks(true);
+                            break;
+                        case ConsoleKey.F2:
+                            Beep = !Beep;
+                            Console.WriteLine("Beep " + (Beep ? "Enabled" : "Disabled"));
+                            break;
+                        case ConsoleKey.Escape:
+                            updateTimer.Stop();
+                            sWriter.Flush();
+                            sWriter.Close();
+                            Environment.Exit(0);
+                            break;
+                    }
+                }
+            }
+            catch
+            {
+                //因为各种各样的问题导致没办法Console.Readkey,改用最原始的
+                Console.WriteLine("This Env doesn't support Console.ReadKey,falling back...");
+            }
+
             while (true)
             {
-                switch (Console.ReadKey().Key)
+                switch (Console.ReadLine())
                 {
-                    case ConsoleKey.F1:
+                    case "switch":
                         Console.Clear();
                         iPhone12Pro = !iPhone12Pro;
                         Console.WriteLine("Switching to:" + (iPhone12Pro ? "12Pro" : "12"));
                         break;
-                    case ConsoleKey.Spacebar:
+                    case "allstocks":
                         Console.Clear();
                         stocks.PrintStocks();
                         break;
-                    case ConsoleKey.Enter:
+                    case "stocks":
                         Console.Clear();
                         stocks.PrintStocks(true);
                         break;
-                    case ConsoleKey.F2:
+                    case "beep":
                         Beep = !Beep;
                         Console.WriteLine("Beep " + (Beep ? "Enabled" : "Disabled"));
                         break;
-                    case ConsoleKey.Escape:
+                    case "esc":
                         updateTimer.Stop();
                         sWriter.Flush();
                         sWriter.Close();
@@ -69,7 +107,7 @@ namespace Avability.Core
         {
             updateTimer.Stop();
             Console.Write("Updating Stock...");
-            if (!stocks.Update(iPhone12Pro)) { Console.WriteLine("Update Fail"); return; }
+            if (!stocks.Update(iPhone12Pro)) { Console.WriteLine("Update Fail"); updateTimer.Start(); return; }
             else Console.WriteLine("Success");
 
             var available = stocks.FindStocks();

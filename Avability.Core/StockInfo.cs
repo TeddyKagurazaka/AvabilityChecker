@@ -34,10 +34,10 @@ namespace Avability.Core
 
         public bool Update(bool iP12Pro = true)
         {
-            StoreStocks.Clear();
-
             var data = Internals.Request(string.Format("https://reserve-prime.apple.com/CN/zh_CN/reserve/{0}/availability.json",iP12Pro ? "A" :"F"));
             if (string.IsNullOrEmpty(data)) return false;
+
+            StoreStocks.Clear();
 
             var contents = JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
 

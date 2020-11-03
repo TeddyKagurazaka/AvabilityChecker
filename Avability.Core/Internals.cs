@@ -13,6 +13,7 @@ namespace Avability.Core
             try
             {
                 var req = WebRequest.CreateHttp(Url);
+                req.Timeout = 2000;
                 var resp = req.GetResponse() as HttpWebResponse;
 
                 using (var respReader = new System.IO.StreamReader(resp.GetResponseStream()))
