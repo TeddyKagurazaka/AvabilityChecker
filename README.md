@@ -46,4 +46,4 @@
 根据抢货经验分析,每家店的上架时间 <b>并不一定为早上6点</b>, 因此通过记录的方式可以统计上新规律(也许)
 
 ## 更新日志
-[ChangeLog](../blob/master/ChangeLog.md)
+[ChangeLog](../master/ChangeLog.md)
