@@ -32,9 +32,9 @@ namespace Avability.Core
             storeInfo = Stores;
         }
 
-        public bool Update(bool iP12Pro = true)
+        public bool Update(string Channel = "A")
         {
-            var data = Internals.Request(string.Format("https://reserve-prime.apple.com/CN/zh_CN/reserve/{0}/availability.json",iP12Pro ? "A" :"F"));
+            var data = Internals.Request(string.Format("https://reserve-prime.apple.com/CN/zh_CN/reserve/{0}/availability.json",Channel));
             if (string.IsNullOrEmpty(data)) return false;
 
             StoreStocks.Clear();
@@ -70,7 +70,6 @@ namespace Avability.Core
                 }
                 }
             catch {return false; }
-            //Console.WriteLine("Stocks Loaded:" + StoreStocks.Count);
             return true;
         }
 
@@ -84,15 +83,6 @@ namespace Avability.Core
                     if(models.Stock.contract || models.Stock.unlocked)
                     {
                         var storeName = stores.Key;
-                        //if(storeInfo != null)
-                        //{
-                        //    var storeData = storeInfo.FindStore(stores.Key);
-                        //    if(storeData != null)
-                        //    {
-                        //        storeName = storeData.storeName;
-                        //    }
-                        //}
-
 
                         if (!output.ContainsKey(storeName))
                             output.Add(storeName, new List<string>());

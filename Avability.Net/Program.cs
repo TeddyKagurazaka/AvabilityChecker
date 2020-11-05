@@ -1,14 +1,27 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Avability.Core
 {
     class Program
     {
+        public enum Model
+        {
+            iPhone12Pro,
+            iPhone12ProMax_iUP,
+            iPhone12ProMax,
+            iPhone12,
+            iPhone12mini_iUP,
+            iphone12mini
+        }
+
         static StoreInfo stores;
         static StockInfo stocks;
 
         static System.Timers.Timer updateTimer;
-        static bool iPhone12Pro = true;
+        static Model mdl = Model.iPhone12Pro;
+
+        static bool Roulette = false;
         static bool Beep = false;
 
         static System.IO.StreamWriter sWriter;
@@ -22,7 +35,7 @@ namespace Avability.Core
             stores.Update();
 
             stocks = new StockInfo(stores);
-            stocks.Update(iPhone12Pro);
+            stocks.Update(ModelToChannel(mdl));
 
             sWriter = new System.IO.StreamWriter("Stocks.csv",true);
             sWriter.AutoFlush = true;
@@ -32,66 +45,48 @@ namespace Avability.Core
             updateTimer.AutoReset = true;
             updateTimer.Start();
 
-            try
-            {
-                while (true)
-                {
-                    switch (Console.ReadKey().Key)
-                    {
-                        case ConsoleKey.F1:
-                            Console.Clear();
-                            iPhone12Pro = !iPhone12Pro;
-                            Console.WriteLine("Switching to:" + (iPhone12Pro ? "12Pro" : "12"));
-                            break;
-                        case ConsoleKey.Spacebar:
-                            Console.Clear();
-                            stocks.PrintStocks();
-                            break;
-                        case ConsoleKey.Enter:
-                            Console.Clear();
-                            stocks.PrintStocks(true);
-                            break;
-                        case ConsoleKey.F2:
-                            Beep = !Beep;
-                            Console.WriteLine("Beep " + (Beep ? "Enabled" : "Disabled"));
-                            break;
-                        case ConsoleKey.Escape:
-                            updateTimer.Stop();
-                            sWriter.Flush();
-                            sWriter.Close();
-                            Environment.Exit(0);
-                            break;
-                    }
-                }
-            }
-            catch
-            {
-                //因为各种各样的问题导致没办法Console.Readkey,改用最原始的
-                Console.WriteLine("This Env doesn't support Console.ReadKey,falling back...");
-            }
+            Console.WriteLine("Avability Online.");
 
             while (true)
             {
-                switch (Console.ReadLine())
+                switch (Console.ReadKey().Key)
                 {
-                    case "switch":
+                    case ConsoleKey.F1:
                         Console.Clear();
-                        iPhone12Pro = !iPhone12Pro;
-                        Console.WriteLine("Switching to:" + (iPhone12Pro ? "12Pro" : "12"));
+                        updateTimer.Stop();
+                        ChangeChannel();
+                        updateTimer.Start();
                         break;
-                    case "allstocks":
+
+                    case ConsoleKey.F3:
+                        Console.Clear();
+                        updateTimer.Stop();
+                        Roulette = !Roulette;
+                        if (Roulette)
+                        {
+                            updateTimer.Interval = 5000;
+                            Console.WriteLine("Roulette Mode,Scanning All Models.");
+                        }
+                        else
+                        {
+                            updateTimer.Interval = 10000;
+                            Console.WriteLine("Normal Mode,Scanning " + mdl.ToString());
+                        }
+                        updateTimer.Start();
+                        break;
+                    case ConsoleKey.Spacebar:
                         Console.Clear();
                         stocks.PrintStocks();
                         break;
-                    case "stocks":
+                    case ConsoleKey.Enter:
                         Console.Clear();
                         stocks.PrintStocks(true);
                         break;
-                    case "beep":
+                    case ConsoleKey.F2:
                         Beep = !Beep;
                         Console.WriteLine("Beep " + (Beep ? "Enabled" : "Disabled"));
                         break;
-                    case "esc":
+                    case ConsoleKey.Escape:
                         updateTimer.Stop();
                         sWriter.Flush();
                         sWriter.Close();
@@ -99,16 +94,38 @@ namespace Avability.Core
                         break;
                 }
             }
+
         }
-
-        //https://reserve-prime.apple.com/CN/zh_CN/reserve/F?color=%E7%BA%A2%E8%89%B2&capacity=64GB&quantity=1&anchor-store=R705&store=R705&partNumber=MGGP3CH%2FA&channel=&sourceID=&iUID=&iuToken=&iUP=N&appleCare=&rv=&path=&plan=unlocked
-
-        private static void UpdateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        static void UpdateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             updateTimer.Stop();
             Console.Write("Updating Stock...");
-            if (!stocks.Update(iPhone12Pro)) { Console.WriteLine("Update Fail"); updateTimer.Start(); return; }
-            else Console.WriteLine("Success");
+
+            if (!Roulette)
+            {
+                UpdateStocks(mdl);
+            }
+            else
+            {
+                foreach (var chns in new List<Model> { Model.iPhone12Pro, Model.iPhone12ProMax, Model.iPhone12ProMax_iUP,Model.iPhone12, Model.iphone12mini, Model.iPhone12mini_iUP })
+                {
+                    UpdateStocks(chns);
+                    System.Threading.Thread.Sleep(1000);
+                }
+            }
+
+            updateTimer.Start();
+            return;
+        }
+        static void UpdateStocks(Model mdl)
+        {
+            if (!stocks.Update(ModelToChannel(mdl)))
+            {
+                Console.WriteLine(mdl.ToString() + " update fail.");
+                return;
+            }
+            else
+                Console.WriteLine(mdl.ToString() + " success");
 
             var available = stocks.FindStocks();
             if (available.Count > 0)
@@ -125,17 +142,9 @@ namespace Avability.Core
                         }
                     }
 
-                    foreach (var mdl in data.Value)
+                    foreach (var mdldata in data.Value)
                     {
-                        //if(
-                        //    (data.Key == "R502" || data.Key == "R580") //太古里or万象城
-                        //    && Beep 
-                        //    && (mdl == "MGLF3CH/A"  //白256
-                        //    || mdl == "MGLA3CH/A"   //白128
-                        //    || mdl == "MGLE3CH/A"   //黑256
-                        //    || mdl == "MGL93CH/A")) //黑128
-
-                        if(Beep)
+                        if (Beep)
                             Console.Beep(800, 500);
 
                         //将库存数据写入本地,用来统计库存信息
@@ -144,45 +153,90 @@ namespace Avability.Core
                             stocks.LastUpdate.ToLocalTime().ToString(),     //服务器库存时间(大约每30秒一次)
                             friendlyName,                                   //店名
                             data.Key,                                       //店ID(Rxxx)
-                            mdl,                                            //型号
-                            Translate(mdl),                                 //型号名(如 白色128G)
-                            (iPhone12Pro ? "12 Pro" : "12")                 //12或者12Pro
+                            mdldata,                                            //型号
+                            Translate(mdldata),                                 //型号名(如 白色128G)
+                            ModelToChannel(mdl)                 //渠道
                             );
                         sWriter.Flush();
 
-                        Console.WriteLine("[{2}]***Stocks:{0} {1}***", friendlyName, Translate(mdl),DateTime.Now.ToShortTimeString());
-                        Console.WriteLine(string.Format("https://reserve-prime.apple.com/CN/zh_CN/reserve/{2}?" +
-                                                        "anchor-store={0}" +
-                                                        "&store={0}" +
-                                                        "&partNumber={1}" +
-                                                        "&channel=&sourceID=&iUID=&iuToken=&iUP=N&appleCare=&rv=&path=&plan=unlocked", data.Key, mdl,(iPhone12Pro ? "A" :"F")));
+                        Console.WriteLine("[{2}]***Stocks:{0} {1} {2}***", friendlyName, Translate(mdldata), DateTime.Now.ToShortTimeString(), mdl.ToString());
                     }
                 }
             }
-            updateTimer.Start();
-        }
 
+            return;
+        }
+        static void ChangeChannel()
+        {
+            switch (mdl)
+            {
+                case Model.iPhone12Pro:
+                    mdl = Model.iPhone12ProMax;
+                    Console.WriteLine("Changing to iPhone 12 Pro Max");
+                    break;
+                case Model.iPhone12ProMax:
+                    mdl = Model.iPhone12ProMax_iUP;
+                    Console.WriteLine("Changing to iPhone 12 Pro Max(iUP Program)");
+                    break;
+                case Model.iPhone12ProMax_iUP:
+                    mdl = Model.iPhone12;
+                    Console.WriteLine("Changing to iPhone 12");
+                    break;
+                case Model.iPhone12:
+                    mdl = Model.iphone12mini;
+                    Console.WriteLine("Changing to iPhone 12 mini");
+                    break;
+                case Model.iphone12mini:
+                    mdl = Model.iPhone12mini_iUP;
+                    Console.WriteLine("Changing to iPhone 12 mini(iUP Program)");
+                    break;
+                case Model.iPhone12mini_iUP:
+                    mdl = Model.iPhone12Pro;
+                    Console.WriteLine("Changing to iPhone 12 Pro");
+                    break;
+
+            }
+        }
+        static string ModelToChannel(Model mdl)
+        {
+            switch (mdl)
+            {
+                case Model.iPhone12Pro:
+                    return "A";
+                case Model.iPhone12ProMax:
+                    return "B";
+                case Model.iPhone12ProMax_iUP:
+                    return "C";
+                case Model.iPhone12:
+                    return "F";
+                case Model.iphone12mini:
+                    return "G";
+                case Model.iPhone12mini_iUP:
+                    return "H";
+                default: return "A";
+            }
+        }
         static string Translate(string model)
         {
             //这里只记录了Pro型号的颜色信息,其他返回原始型号
             switch (model)
             {
                 case "MGLF3CH/A":
-                    return "白256";
+                    return "12Pro 白256";
                 case "MGLA3CH/A":
-                    return "白128";
+                    return "12Pro 白128";
                 case "MGLE3CH/A":
-                    return "黑256";
+                    return "12Pro 黑256";
                 case "MGL93CH/A":
-                    return "黑128";
+                    return "12Pro 黑128";
                 case "MGLC3CH/A":
-                    return "金128";
+                    return "12Pro 金128";
                 case "MGLG3CH/A":
-                    return "金256";
+                    return "12Pro 金256";
                 case "MGLD3CH/A":
-                    return "蓝128";
+                    return "12Pro 蓝128";
                 case "MGLH3CH/A":
-                    return "蓝256";
+                    return "12Pro 蓝256";
                 default:
                     return model;
 

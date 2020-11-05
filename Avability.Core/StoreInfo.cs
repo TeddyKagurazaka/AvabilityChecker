@@ -25,9 +25,9 @@ namespace Avability.Core
             ConfigInfo = new Dictionary<string, object>();
         }
 
-        public bool Update(){
+        public bool Update(string Channel = "A"){
 
-            var data = Internals.Request("https://reserve-prime.apple.com/CN/zh_CN/reserve/A/stores.json");
+            var data = Internals.Request(string.Format("https://reserve-prime.apple.com/CN/zh_CN/reserve/{0}/stores.json",Channel));
             if (string.IsNullOrEmpty(data)) return false;
 
             StoreData.Clear();
