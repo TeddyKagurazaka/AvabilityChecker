@@ -8,10 +8,10 @@ namespace Avability.Core
         public enum Model
         {
             iPhone12Pro,
-            iPhone12ProMax_iUP,
+            //iPhone12ProMax_iUP,
             iPhone12ProMax,
             iPhone12,
-            iPhone12mini_iUP,
+            //iPhone12mini_iUP,
             iphone12mini
         }
 
@@ -40,7 +40,7 @@ namespace Avability.Core
             sWriter = new System.IO.StreamWriter("Stocks.csv",true);
             sWriter.AutoFlush = true;
 
-            updateTimer = new System.Timers.Timer(10000);
+            updateTimer = new System.Timers.Timer(5000);
             updateTimer.Elapsed += UpdateTimer_Elapsed;
             updateTimer.AutoReset = true;
             updateTimer.Start();
@@ -69,7 +69,7 @@ namespace Avability.Core
                         }
                         else
                         {
-                            updateTimer.Interval = 10000;
+                            updateTimer.Interval = 5000;
                             Console.WriteLine("Normal Mode,Scanning " + mdl.ToString());
                         }
                         updateTimer.Start();
@@ -101,17 +101,24 @@ namespace Avability.Core
             updateTimer.Stop();
             Console.Write("Updating Stock...");
 
-            if (!Roulette)
+            try
             {
-                UpdateStocks(mdl);
-            }
-            else
-            {
-                foreach (var chns in new List<Model> { Model.iPhone12Pro, Model.iPhone12ProMax, Model.iPhone12ProMax_iUP,Model.iPhone12, Model.iphone12mini, Model.iPhone12mini_iUP })
+                if (!Roulette)
                 {
-                    UpdateStocks(chns);
-                    System.Threading.Thread.Sleep(1000);
+                    UpdateStocks(mdl);
                 }
+                else
+                {
+                    foreach (var chns in new List<Model> { Model.iPhone12Pro, Model.iPhone12ProMax})
+                    {
+                        UpdateStocks(chns);
+                        System.Threading.Thread.Sleep(1000);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("Failed." + ex.Message);
             }
 
             updateTimer.Start();
@@ -130,6 +137,8 @@ namespace Avability.Core
             var available = stocks.FindStocks();
             if (available.Count > 0)
             {
+                if (Beep)
+                    Console.Beep(800, 500);
                 foreach (var data in available)
                 {
                     var friendlyName = data.Key;
@@ -144,8 +153,7 @@ namespace Avability.Core
 
                     foreach (var mdldata in data.Value)
                     {
-                        if (Beep)
-                            Console.Beep(800, 500);
+
 
                         //将库存数据写入本地,用来统计库存信息
                         sWriter.WriteLine("{0},{1},{2},{3},{4},{5},{6}",
@@ -175,25 +183,25 @@ namespace Avability.Core
                     Console.WriteLine("Changing to iPhone 12 Pro Max");
                     break;
                 case Model.iPhone12ProMax:
-                    mdl = Model.iPhone12ProMax_iUP;
-                    Console.WriteLine("Changing to iPhone 12 Pro Max(iUP Program)");
-                    break;
-                case Model.iPhone12ProMax_iUP:
                     mdl = Model.iPhone12;
                     Console.WriteLine("Changing to iPhone 12");
                     break;
+                //case Model.iPhone12ProMax_iUP:
+                //    mdl = Model.iPhone12;
+                //    Console.WriteLine("Changing to iPhone 12");
+                //    break;
                 case Model.iPhone12:
                     mdl = Model.iphone12mini;
                     Console.WriteLine("Changing to iPhone 12 mini");
                     break;
                 case Model.iphone12mini:
-                    mdl = Model.iPhone12mini_iUP;
-                    Console.WriteLine("Changing to iPhone 12 mini(iUP Program)");
-                    break;
-                case Model.iPhone12mini_iUP:
                     mdl = Model.iPhone12Pro;
                     Console.WriteLine("Changing to iPhone 12 Pro");
                     break;
+                //case Model.iPhone12mini_iUP:
+                //    mdl = Model.iPhone12Pro;
+                //    Console.WriteLine("Changing to iPhone 12 Pro");
+                //    break;
 
             }
         }
@@ -204,15 +212,15 @@ namespace Avability.Core
                 case Model.iPhone12Pro:
                     return "A";
                 case Model.iPhone12ProMax:
-                    return "B";
-                case Model.iPhone12ProMax_iUP:
-                    return "C";
+                    return "G";
+                //case Model.iPhone12ProMax_iUP:
+                //    return "C";
                 case Model.iPhone12:
                     return "F";
                 case Model.iphone12mini:
-                    return "G";
-                case Model.iPhone12mini_iUP:
                     return "H";
+                //case Model.iPhone12mini_iUP:
+                //    return "H";
                 default: return "A";
             }
         }
